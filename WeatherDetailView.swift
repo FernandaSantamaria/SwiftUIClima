@@ -15,44 +15,49 @@ struct WeatherDetailView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                RoundedRectangle(cornerRadius: 30)
-                    .fill(.ultraThinMaterial)
+                Image("fondo")
+                    .resizable()
+                    .scaledToFill()
                     .ignoresSafeArea()
-                content
-            }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Cerrar") { dismiss() }
+
+                VStack {
+                    if viewModel.isLoading {
+                        ProgressView("Cargando...")
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                    } else if let data = viewModel.weatherData {
+                        ScrollView {
+                            VStack(spacing: 20) {
+                                WeatherCard(title: "Temperatura", value: data.temperatura, icon: "thermometer", color: .red)
+                                WeatherCard(title: "Sensación", value: data.sensacion_termica, icon: "thermometer.snowflake", color: .blue)
+                                WeatherCard(title: "Humedad", value: data.humedad, icon: "drop.fill", color: .teal)
+                                WeatherCard(title: "Viento", value: data.viento, icon: "wind", color: .gray)
+                                WeatherCard(title: "UV", value: data.uv, icon: "sun.max.fill", color: .yellow)
+                                WeatherCard(title: "Lluvia", value: data.is_lloviendo, icon: data.is_lloviendo == "Sí" ? "cloud.rain.fill" : "sun.max.fill", color: data.is_lloviendo == "Sí" ? .blue : .yellow)
+                            }
+                            .padding()
+                        }
+                    } else if let error = viewModel.errorMessage {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .padding()
+                    }
+
+                    Spacer()
                 }
             }
             .navigationTitle("Clima")
-        }
-        .task { await viewModel.loadWeatherData(for: city) }
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        if viewModel.isLoading {
-            ProgressView("Cargando...")
-                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-                .scaleEffect(1.5)
-        } else if let data = viewModel.weatherData {
-            ScrollView {
-                VStack(spacing: 20) {
-                    WeatherCard(title: "Temperatura", value: data.temperatura, icon: "thermometer", color: .red)
-                    WeatherCard(title: "Sensación", value: data.sensacion_termica, icon: "thermometer.snowflake", color: .blue)
-                    WeatherCard(title: "Humedad", value: data.humedad, icon: "drop.fill", color: .teal)
-                    WeatherCard(title: "Viento", value: data.viento, icon: "wind", color: .gray)
-                    WeatherCard(title: "UV", value: data.uv, icon: "sun.max.fill", color: .yellow)
-                    WeatherCard(title: "Lluvia", value: data.is_lloviendo, icon: data.is_lloviendo == "Sí" ? "cloud.rain.fill" : "sun.max.fill", color: data.is_lloviendo == "Sí" ? .blue : .yellow)
+            .toolbar {
+                ToolbarItem(placement: .navigation) {
+                    Button(action: { dismiss() }) {
+                        Label("Volver", systemImage: "chevron.left")
+                            .foregroundColor(.white)
+                    }
                 }
-                .padding()
             }
-        } else if let error = viewModel.errorMessage {
-            Text(error)
-                .foregroundColor(.red)
-                .multilineTextAlignment(.center)
-                .padding()
+        }
+        .task {
+            await viewModel.loadWeatherData(for: city)
         }
     }
 }

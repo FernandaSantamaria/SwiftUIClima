@@ -18,23 +18,29 @@ class OutfitViewModel: ObservableObject {
     private let service = WeatherService()
     
     enum Gender: String, CaseIterable {
-        case mujer = "Mujer"
-        case hombre = "Hombre"
+        case mujer = "mujer"
+        case hombre = "hombre"
     }
     
-    func loadOutfitRecommendation(for city: String = "León") async {
+    func loadOutfitRecommendation(for city: String) async {
         isLoading = true
         errorMessage = nil
-        
+
         do {
-            let genderParam = selectedGender == .mujer ? "mujer" : "hombre"
-            outfitRecommendation = try await service.getOutfitRecommendation(for: city, gender: genderParam)
+            let genderParam = selectedGender.rawValue
+            let weatherData = try await service.getWeatherData(for: city, gender: genderParam)
+        
+            self.outfitRecommendation = OutfitRecommendation(
+                ubicacion: city,
+                temperatura: weatherData.temperaturaDouble,
+                condicion: weatherData.condicion,
+                recomendacion: weatherData.outfit,
+                error: false
+            )
         } catch {
             errorMessage = "Error al cargar recomendación: \(error.localizedDescription)"
             print("Outfit error: \(error)")
         }
-        
         isLoading = false
     }
 }
-

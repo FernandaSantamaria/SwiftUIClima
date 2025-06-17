@@ -17,4 +17,11 @@ struct WeatherData: Codable {
     let uv: String
     let hora_local: String
     let is_lloviendo: String
+    let condicion: String
+}
+
+extension WeatherData {
+    var temperaturaDouble: Double {
+        Double(temperatura.replacingOccurrences(of: "°C", with: "")) ?? 0.0
+    }
 }
